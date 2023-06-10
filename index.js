@@ -3,7 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -70,6 +70,18 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/role/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ error: 1, message: "forbidden access" });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { role: user?.role === "admin" || user?.role === "instructors" };
+      res.send(result);
+    });
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -78,6 +90,30 @@ async function run() {
         return res.send({ message: "User Already has been Create" });
       }
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateUser = {
+        $or: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateUser);
+      res.send(result);
+    });
+
+    app.patch("/users/instructors/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateUser = {
+        $set: {
+          role: "instructors",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateUser);
       res.send(result);
     });
 
