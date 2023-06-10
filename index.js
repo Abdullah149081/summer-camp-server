@@ -43,6 +43,16 @@ async function run() {
     const bannerCollection = client.db("summerDB").collection("banner");
     const usersCollection = client.db("summerDB").collection("users");
 
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ error: true, message: "forbidden access" });
+      }
+      next();
+    };
+
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
