@@ -42,6 +42,12 @@ async function run() {
 
     const bannerCollection = client.db("summerDB").collection("banner");
 
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+      res.send({ token });
+    });
+
     app.get("/banner", async (req, res) => {
       const result = await bannerCollection.find().toArray();
       res.send(result);
