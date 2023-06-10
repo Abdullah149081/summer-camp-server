@@ -41,6 +41,7 @@ async function run() {
     await client.connect();
 
     const bannerCollection = client.db("summerDB").collection("banner");
+    const usersCollection = client.db("summerDB").collection("users");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -50,6 +51,18 @@ async function run() {
 
     app.get("/banner", async (req, res) => {
       const result = await bannerCollection.find().toArray();
+      res.send(result);
+    });
+
+    // user api
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User Already has been Create" });
+      }
+      const result = await usersCollection.insertOne(user);
       res.send(result);
     });
 
