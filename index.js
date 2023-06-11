@@ -42,6 +42,7 @@ async function run() {
 
     const bannerCollection = client.db("summerDB").collection("banner");
     const usersCollection = client.db("summerDB").collection("users");
+    const classCollection = client.db("summerDB").collection("class");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -65,7 +66,7 @@ async function run() {
     });
 
     // user api
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -88,7 +89,6 @@ async function run() {
         admin: user?.role === "admin",
         instructors: user?.role === "instructors",
       };
-      console.log(result);
       res.send(result);
     });
 
@@ -124,6 +124,19 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateUser);
+      res.send(result);
+    });
+
+    // class api
+
+    app.get("/class", verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/class", verifyJwt, async (req, res) => {
+      const newClass = req.body;
+      const result = await classCollection.insertOne(newClass);
       res.send(result);
     });
 
