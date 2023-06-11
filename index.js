@@ -70,6 +70,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/instructors", async (req, res) => {
+      const query = { role: "instructors" };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/users/role/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
       if (req.decoded.email !== email) {
@@ -78,7 +84,11 @@ async function run() {
 
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      const result = { role: user?.role === "admin" || user?.role === "instructors" };
+      const result = {
+        admin: user?.role === "admin",
+        instructors: user?.role === "instructors",
+      };
+      console.log(result);
       res.send(result);
     });
 
@@ -97,7 +107,7 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateUser = {
-        $or: {
+        $set: {
           role: "admin",
         },
       };
