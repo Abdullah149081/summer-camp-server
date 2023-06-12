@@ -43,6 +43,7 @@ async function run() {
     const bannerCollection = client.db("summerDB").collection("banner");
     const usersCollection = client.db("summerDB").collection("users");
     const classCollection = client.db("summerDB").collection("class");
+    const selectedCollection = client.db("summerDB").collection("selected");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -194,6 +195,29 @@ async function run() {
       };
       const result = await classCollection.updateOne(filter, updateUser);
       console.log(result);
+      res.send(result);
+    });
+
+    // selected api
+
+    app.get("/selected", verifyJwt, async (req, res) => {
+      const decoded = req.decoded;
+
+      if (decoded.email !== req.query.email) {
+        return res.status(403).send({ error: 1, message: "forbidden access" });
+      }
+
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await selectedCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/selected", async (req, res) => {
+      const item = req.body;
+      const result = await selectedCollection.insertOne(item);
       res.send(result);
     });
 
