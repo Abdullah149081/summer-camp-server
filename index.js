@@ -54,6 +54,16 @@ async function run() {
       next();
     };
 
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "instructors") {
+        return res.status(403).send({ error: true, message: "forbidden access" });
+      }
+      next();
+    };
+
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
@@ -129,8 +139,27 @@ async function run() {
 
     // class api
 
+    app.get("/class/:email", verifyJwt, verifyInstructor, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/class/allClass", async (req, res) => {
+      const query = { status: "approve" };
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/class", verifyJwt, verifyAdmin, async (req, res) => {
       const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/allClass", async (req, res) => {
+      const query = { status: "approve" };
+      const result = await classCollection.find(query).toArray();
       res.send(result);
     });
 
